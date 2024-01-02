@@ -1,12 +1,13 @@
 package com.anime_pages.anime_page.models;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.List;
 
@@ -16,131 +17,73 @@ public class AnimeDetailsModels {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "mal_id")
+    private Long id;
+
     private Long malId;
-
-
-    @Column(name = "url")
     private String url;
 
+    
+    private String title;
+
+
     @Embedded
-    @Column(name = "images")
     private ImagesModels images;
     
-    @Embedded
-    @Column(name = "trailer_url")
-    private Trailer trailer;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "anime")
+    private List<TitlesModels> titles;
 
-    @ElementCollection
-    @Embedded
-    @Column(name = "titles")
-    private List<TitleModels> titles;
-
-    @Column(name = "type")
     private String type;
-
-    @Column(name = "source")
     private String source;
-
-    @Column(name = "episodes")
     private Integer episodes;
-
-    @Column(name = "status")
     private String status;
 
-    @Embedded
-    @Column(name = "aired")
-    private AiredModels aired;
-
-    @Column(name = "duration")
     private String duration;
-
-    @Column(name = "rating")
     private String rating;
-
-
-    @Column(name = "rank")
     private int rank;
-
-    @Column(name = "popularity")
     private int popularity;
-
-    @Column(name = "score")
     private Double score;
 
     @Column(name = "synopsis", length = 4000)
     private String synopsis;
 
-    @ElementCollection
-    @Embedded
-    @Column(name = "producers")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "anime")
     private List<ProducerModels> producers;
 
-    @ElementCollection
-    @Embedded
-    @Column(name = "licensors")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "anime")
     private List<LicensorModels> licensors;
 
-    @ElementCollection
-    @Embedded
-    @Column(name = "studios")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "anime")
     private List<StudioModels> studios;
 
-    @ElementCollection
-    @Embedded
-    @Column(name = "genres")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "anime")
     private List<GenreModels> genres;
 
-    @ElementCollection
-    @Embedded
-    @Column(name = "themes")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "anime")
     private List<ThemeModels> themes;
 
-    @ElementCollection
-    @Embedded
-    @Column(name = "demographics")
-    private List<DemographicModels> demographics;
 
     public AnimeDetailsModels() {
-    }   
+    }
 
-    public AnimeDetailsModels(
-                Long malId,
-                String url, 
-                ImagesModels images,
-                Trailer trailer,
-                List<TitleModels> titles,
-                String type,
-                String source,
-                Integer episodes,
-                String status,
-                AiredModels aired,
-                String duration,
-                String rating,
-                Integer rank,
-                Integer popularity,
-                Double score,
-                String synopsis,
-                List<ProducerModels> producers,
-                List<LicensorModels> licensors,
-                List<StudioModels> studios,
-                List<GenreModels> genres,
-                List<ThemeModels> themes,
-                List<DemographicModels> demographics) {
+    public AnimeDetailsModels(Long id, Long malId, String url, String title, ImagesModels images,
+            List<TitlesModels> titles, String type, String source, Integer episodes, String status,
+            String duration, String rating, int rank, int popularity, Double score, String synopsis,
+            List<ProducerModels> producers, List<LicensorModels> licensors, List<StudioModels> studios,
+            List<GenreModels> genres, List<ThemeModels> themes) {
+        this.id = id;
         this.malId = malId;
         this.url = url;
+        this.title = title;
         this.images = images;
-        this.trailer = trailer;
         this.titles = titles;
         this.type = type;
         this.source = source;
         this.episodes = episodes;
         this.status = status;
-        this.aired = aired;
         this.duration = duration;
         this.rating = rating;
         this.rank = rank;
-        this.popularity = popularity;   
+        this.popularity = popularity;
         this.score = score;
         this.synopsis = synopsis;
         this.producers = producers;
@@ -148,7 +91,14 @@ public class AnimeDetailsModels {
         this.studios = studios;
         this.genres = genres;
         this.themes = themes;
-        this.demographics = demographics;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public Long getMalId() {
@@ -167,6 +117,14 @@ public class AnimeDetailsModels {
         this.url = url;
     }
 
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
     public ImagesModels getImages() {
         return images;
     }
@@ -175,19 +133,11 @@ public class AnimeDetailsModels {
         this.images = images;
     }
 
-    public Trailer getTrailer() {
-        return trailer;
-    }
-
-    public void setTrailer(Trailer trailer) {
-        this.trailer = trailer;
-    }
-
-    public List<TitleModels> getTitles() {
+    public List<TitlesModels> getTitles() {
         return titles;
     }
 
-    public void setTitles(List<TitleModels> titles) {
+    public void setTitles(List<TitlesModels> titles) {
         this.titles = titles;
     }
 
@@ -221,14 +171,6 @@ public class AnimeDetailsModels {
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public AiredModels getAired() {
-        return aired;
-    }
-
-    public void setAired(AiredModels aired) {
-        this.aired = aired;
     }
 
     public String getDuration() {
@@ -319,13 +261,4 @@ public class AnimeDetailsModels {
         this.themes = themes;
     }
 
-    public List<DemographicModels> getDemographics() {
-        return demographics;
-    }
-
-    public void setDemographics(List<DemographicModels> demographics) {
-        this.demographics = demographics;
-    }   
-    
-    
 }

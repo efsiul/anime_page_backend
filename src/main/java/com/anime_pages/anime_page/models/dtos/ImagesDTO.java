@@ -1,5 +1,6 @@
 package com.anime_pages.anime_page.models.dtos;
 
+
 public class ImagesDTO {
     private ImageTypeDto jpg;
     private ImageTypeDto webp;

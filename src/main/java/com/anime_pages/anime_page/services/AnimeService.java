@@ -11,13 +11,9 @@ import java.util.List;
 public class AnimeService implements InterfaceAnimeService {
 
     @Value("${jikan.api.url}")
-    private String jikanApiUrl; // URL de la API de Jikan
+    private String jikanApiUrl; 
 
-    private final RestTemplate restTemplate;
-
-    public AnimeService(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
-    }
+    private RestTemplate restTemplate;
 
     @Override
     public AnimeDetailsDTO searchAnimeTitle(String title) {

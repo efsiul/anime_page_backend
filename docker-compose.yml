@@ -16,21 +16,8 @@ services:
     environment:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: 841205
-      POSTGRES_DB: AnimePageDB
+      POSTGRES_DB: AnimePage
     ports:
       - "5432:5432"
 
-  anime_page:
-    container_name: anime_page_container
-    image: your-docker-image-for-anime-page:latest
-    restart: always
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/AnimePage
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: 841205
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_JPA_SHOW_SQL: true
-    ports:
-      - "8080:8080"
-    depends_on:
-      - db
+

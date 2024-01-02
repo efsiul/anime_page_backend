@@ -1,5 +1,7 @@
 package com.anime_pages.anime_page.models.dtos;
 
+
+
 public class ImageTypeDto {
     private String imageUrl;
     private String smallImageUrl;
