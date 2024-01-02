@@ -1,5 +1,6 @@
 package com.anime_pages.anime_page.models.dtos;
 
+
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -20,12 +21,6 @@ public class AnimeDetailsDTO {
     @JsonProperty("title")
     private String title;
 
-    @JsonProperty("images")
-    private ImagesDTO images;
-
-    @JsonProperty("titles")
-    private List<TitlesDTO> titles;
-
     @JsonProperty("type")
     private String type;
 
@@ -45,10 +40,10 @@ public class AnimeDetailsDTO {
     private String rating;
 
     @JsonProperty("rank")
-    private int rank;
+    private Integer rank;
 
     @JsonProperty("popularity")
-    private int popularity;
+    private Integer popularity;
 
     @JsonProperty("score")
     private Double score;
@@ -56,31 +51,7 @@ public class AnimeDetailsDTO {
     @JsonProperty("synopsis")
     private String synopsis;
 
-    @JsonProperty("producers")
-    private List<ProducerDTO> producers;
+    @JsonProperty("animes")
+    private List<AnimeDetailsDTO> animes;
 
-    @JsonProperty("licensors")
-    private List<LicensorDTO> licensors;
-
-    @JsonProperty("studios")
-    private List<StudioDTO> studios;
-
-    @JsonProperty("genres")
-    private List<GenreDTO> genres;
-
-    @JsonProperty("themes")
-    private List<ThemeDTO> themes;
-
-    // Override toString() for debugging if needed
-
-    @Override
-    public String toString() {
-        return "AnimeDetailsDTO{" +
-                "id=" + id +
-                ", malId=" + malId +
-                ", url='" + url + '\'' +
-                ", title='" + title + '\'' +
-                // ... repeat for other fields
-                '}';
-    }
 }

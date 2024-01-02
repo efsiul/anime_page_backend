@@ -6,5 +6,4 @@ import com.anime_pages.anime_page.models.AnimeDetailsModels;
 @Repository
 public interface IAnimeRepository extends JpaRepository<AnimeDetailsModels, Long> {
     
-
 }
