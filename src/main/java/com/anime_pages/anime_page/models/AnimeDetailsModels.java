@@ -2,17 +2,22 @@ package com.anime_pages.anime_page.models;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import lombok.Data;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+
+@Data
 @Entity
 @Table(name = "anime_details")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AnimeDetailsModels {
 
     @Id
@@ -21,12 +26,9 @@ public class AnimeDetailsModels {
 
     private Long malId;
     private String url;
-
-    
     private String title;
 
-
-    @Embedded
+    @OneToOne(cascade = CascadeType.ALL)
     private ImagesModels images;
     
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "anime")
@@ -36,7 +38,6 @@ public class AnimeDetailsModels {
     private String source;
     private Integer episodes;
     private String status;
-
     private String duration;
     private String rating;
     private int rank;
@@ -61,204 +62,35 @@ public class AnimeDetailsModels {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "anime")
     private List<ThemeModels> themes;
 
-
-    public AnimeDetailsModels() {
+    public void addGenre(GenreModels genre) {
+        this.genres.add(genre);
+        genre.setAnime(this);
     }
 
-    public AnimeDetailsModels(Long id, Long malId, String url, String title, ImagesModels images,
-            List<TitlesModels> titles, String type, String source, Integer episodes, String status,
-            String duration, String rating, int rank, int popularity, Double score, String synopsis,
-            List<ProducerModels> producers, List<LicensorModels> licensors, List<StudioModels> studios,
-            List<GenreModels> genres, List<ThemeModels> themes) {
-        this.id = id;
-        this.malId = malId;
-        this.url = url;
-        this.title = title;
-        this.images = images;
-        this.titles = titles;
-        this.type = type;
-        this.source = source;
-        this.episodes = episodes;
-        this.status = status;
-        this.duration = duration;
-        this.rating = rating;
-        this.rank = rank;
-        this.popularity = popularity;
-        this.score = score;
-        this.synopsis = synopsis;
-        this.producers = producers;
-        this.licensors = licensors;
-        this.studios = studios;
-        this.genres = genres;
-        this.themes = themes;
+    public void addTheme(ThemeModels theme) {
+        this.themes.add(theme);
+        theme.setAnime(this);
     }
 
-    public Long getId() {
-        return id;
+    public void addProducer(ProducerModels producer) {
+        this.producers.add(producer);
+        producer.setAnime(this);
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void addLicensor(LicensorModels licensor) {
+        this.licensors.add(licensor);
+        licensor.setAnime(this);
     }
 
-    public Long getMalId() {
-        return malId;
+    public void addStudio(StudioModels studio) {
+        this.studios.add(studio);
+        studio.setAnime(this);
     }
 
-    public void setMalId(Long malId) {
-        this.malId = malId;
+    public void addTitle(TitlesModels title) {
+        this.titles.add(title);
+        title.setAnime(this);
     }
 
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public ImagesModels getImages() {
-        return images;
-    }
-
-    public void setImages(ImagesModels images) {
-        this.images = images;
-    }
-
-    public List<TitlesModels> getTitles() {
-        return titles;
-    }
-
-    public void setTitles(List<TitlesModels> titles) {
-        this.titles = titles;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public String getSource() {
-        return source;
-    }
-
-    public void setSource(String source) {
-        this.source = source;
-    }
-
-    public Integer getEpisodes() {
-        return episodes;
-    }
-
-    public void setEpisodes(Integer episodes) {
-        this.episodes = episodes;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getDuration() {
-        return duration;
-    }
-
-    public void setDuration(String duration) {
-        this.duration = duration;
-    }
-
-    public String getRating() {
-        return rating;
-    }
-
-    public void setRating(String rating) {
-        this.rating = rating;
-    }
-
-    public int getRank() {
-        return rank;
-    }
-
-    public void setRank(int rank) {
-        this.rank = rank;
-    }
-
-    public int getPopularity() {
-        return popularity;
-    }
-
-    public void setPopularity(int popularity) {
-        this.popularity = popularity;
-    }
-
-    public Double getScore() {
-        return score;
-    }
-
-    public void setScore(Double score) {
-        this.score = score;
-    }
-
-    public String getSynopsis() {
-        return synopsis;
-    }
-
-    public void setSynopsis(String synopsis) {
-        this.synopsis = synopsis;
-    }
-
-    public List<ProducerModels> getProducers() {
-        return producers;
-    }
-
-    public void setProducers(List<ProducerModels> producers) {
-        this.producers = producers;
-    }
-
-    public List<LicensorModels> getLicensors() {
-        return licensors;
-    }
-
-    public void setLicensors(List<LicensorModels> licensors) {
-        this.licensors = licensors;
-    }
-
-    public List<StudioModels> getStudios() {
-        return studios;
-    }
-
-    public void setStudios(List<StudioModels> studios) {
-        this.studios = studios;
-    }
-
-    public List<GenreModels> getGenres() {
-        return genres;
-    }
-
-    public void setGenres(List<GenreModels> genres) {
-        this.genres = genres;
-    }
-
-    public List<ThemeModels> getThemes() {
-        return themes;
-    }
-
-    public void setThemes(List<ThemeModels> themes) {
-        this.themes = themes;
-    }
 
 }
