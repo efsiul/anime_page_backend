@@ -20,7 +20,7 @@ public class AnimeDetailsModels {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long malId;
+    private Long mal_id;
     private String url;
     private String title;
     private String type;
@@ -33,7 +33,7 @@ public class AnimeDetailsModels {
     private Integer popularity;
     private Double score;
 
-    @Column(name = "synopsis", length = 4000)
+    @Column(name = "synopsis", length = 8000)
     private String synopsis;
 
 

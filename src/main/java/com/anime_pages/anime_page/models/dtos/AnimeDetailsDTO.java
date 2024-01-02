@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+
 import lombok.Data;
 
 @Data
@@ -12,8 +13,8 @@ public class AnimeDetailsDTO {
 
     private Long id;
 
-    @JsonProperty("malId")
-    private Long malId;
+    @JsonProperty("mal_id")
+    private Integer mal_id;
 
     @JsonProperty("url")
     private String url;
@@ -50,8 +51,7 @@ public class AnimeDetailsDTO {
 
     @JsonProperty("synopsis")
     private String synopsis;
-
-    @JsonProperty("animes")
-    private List<AnimeDetailsDTO> animes;
+    
+    private List<Anime> animes;
 
 }

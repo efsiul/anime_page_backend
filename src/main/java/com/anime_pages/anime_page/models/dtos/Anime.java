@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class Anime {
 
-    private Long malId;
+    private Integer mal_id;
 
     private String url;
 
@@ -28,5 +28,9 @@ public class Anime {
     private Integer popularity;
 
     private Double score;
+
+    private String synopsis;
+
+
 
 }
