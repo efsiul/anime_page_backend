@@ -3,9 +3,7 @@ package com.anime_pages.anime_page.services;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import com.anime_pages.anime_page.interfaces.InterfaceAnimeService;
 import com.anime_pages.anime_page.models.AnimeDetailsModels;
@@ -34,19 +32,26 @@ public class AnimeService implements InterfaceAnimeService {
     private WebClient webClient;
     private final ModelMapper modelMapper; 
 
-    public AnimeService(WebClient webClient, ModelMapper modelMapper, IAnimeRepository animeRepository) {
+    public AnimeService(WebClient webClient, IAnimeRepository animeRepository, ModelMapper modelMapper) {
         this.webClient = webClient;
         this.modelMapper = modelMapper;
         this.animeRepository = animeRepository; 
     }
+
     @Override
     public List<AnimeDetailsDTO> searchAnimeTitle(String title) {
         String formattedTitle = title.replace(" ", "%20");
-        String apiUrl = jikanApiUrl + "/anime?q=" + title + formattedTitle + "&sfw&exact=true";
+        String apiUrl = jikanApiUrl + "/anime?q=" + formattedTitle + "&sfw=true&exact=true";
 
+        // String apiResponse = webClient.get()
+        // .uri(apiUrl)
+        // .retrieve()
+        // .bodyToMono(String.class)
+        // .block();
+
+        // System.out.println("API Response: " + apiResponse);
 
         try {
-
             return webClient.get()
                     .uri(apiUrl)
                     .retrieve()
@@ -57,25 +62,31 @@ public class AnimeService implements InterfaceAnimeService {
                             for (AnimeDTO anime : animeResponse.getAnimes()) {
                                 AnimeDetailsDTO animeDetailsDTO = AnimeMapper.mapToAnimeDetailsDTO(anime);
 
+                                // Verificar si el anime ya existe en la base de datos
                                 if (!animeRepository.existsByTitle(animeDetailsDTO.getTitle())) {
                                     AnimeDetailsModels animeDetailsModels = modelMapper.map(animeDetailsDTO, AnimeDetailsModels.class);
                                     animeRepository.save(animeDetailsModels);
                                 }
 
                                 animeDetailsDTOs.add(animeDetailsDTO);
+                                System.out.println("animeDetailsDTOs: " + animeDetailsDTOs);
+
                             }
+                        }else {
+                            System.out.println("No se encontraron resultados para la búsqueda: " + title);
                         }
-    
+
                         return animeDetailsDTOs;
                     })
                     .block();
-    
         } catch (Exception e) {
             e.printStackTrace();
         }
-    
+
         return Collections.emptyList();
     }
+
+
 
     @Override
     public List<AverageScoreByTypeSeasonDTO> averageScoreByTypeSeason() {

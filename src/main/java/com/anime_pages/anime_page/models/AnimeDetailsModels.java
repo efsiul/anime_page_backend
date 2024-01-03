@@ -36,6 +36,7 @@ public class AnimeDetailsModels {
 
     @Column(name = "synopsis", length = 8000)
     private String synopsis;
-
+    
+    private String season;
 
 }

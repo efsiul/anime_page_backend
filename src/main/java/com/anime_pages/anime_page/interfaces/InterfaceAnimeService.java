@@ -11,7 +11,7 @@ public interface InterfaceAnimeService {
     // Método para buscar un título de anime
     List<AnimeDetailsDTO> searchAnimeTitle(String title);
     
-     List<AverageScoreByTypeSeasonDTO> averageScoreByTypeSeason();
+    List<AverageScoreByTypeSeasonDTO> averageScoreByTypeSeason();
     
     
     // AnimeDetailsDTO searchAnimeTitle(String title);
