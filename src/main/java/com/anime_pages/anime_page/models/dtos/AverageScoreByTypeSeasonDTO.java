@@ -4,10 +4,12 @@ import lombok.Data;
 
 @Data
 public class AverageScoreByTypeSeasonDTO {
+    private String title;
     private String type;
     private double average;
 
-    public AverageScoreByTypeSeasonDTO(String type, double average) {
+    public AverageScoreByTypeSeasonDTO(String title, String type, double average) {
+        this.title = title;
         this.type = type;
         this.average = average;
     }
