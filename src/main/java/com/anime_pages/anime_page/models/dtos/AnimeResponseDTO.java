@@ -7,13 +7,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
-public class AnimeResponse {
+public class AnimeResponseDTO {
 
     private Boolean success;
 
     private String message;
 
     @JsonProperty("data")
-    private List<Anime> animes;
+    private List<AnimeDTO> animes;
 
 }

@@ -1,5 +1,6 @@
 package com.anime_pages.anime_page;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
@@ -19,4 +20,10 @@ public class AnimePageApplication {
     public WebClient webClient() {
         return WebClient.create();
     }
+
+    @Bean
+    public ModelMapper modelMapper() {
+        return new ModelMapper();
+    }
+
 }

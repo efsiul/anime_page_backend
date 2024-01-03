@@ -51,7 +51,11 @@ public class AnimeDetailsDTO {
 
     @JsonProperty("synopsis")
     private String synopsis;
+
+    @JsonProperty("season")
+    private String season;
+
     
-    private List<Anime> animes;
+    private List<AnimeDTO> animes;
 
 }

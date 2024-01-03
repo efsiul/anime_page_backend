@@ -3,7 +3,7 @@ package com.anime_pages.anime_page.models.dtos;
 import lombok.Data;
 
 @Data
-public class Anime {
+public class AnimeDTO {
 
     private Integer mal_id;
 
@@ -30,6 +30,8 @@ public class Anime {
     private Double score;
 
     private String synopsis;
+
+    private String season;
 
 
 

@@ -20,7 +20,8 @@ public class AnimeDetailsModels {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long mal_id;
+    @Column(name = "mal_id")
+    private Integer mal_id;
     private String url;
     private String title;
     private String type;

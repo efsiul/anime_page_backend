@@ -1,11 +1,11 @@
 package com.anime_pages.anime_page.services.mapper;
 
-import com.anime_pages.anime_page.models.dtos.Anime;
+import com.anime_pages.anime_page.models.dtos.AnimeDTO;
 import com.anime_pages.anime_page.models.dtos.AnimeDetailsDTO;
 
 public class AnimeMapper {
 
-    public static AnimeDetailsDTO mapToAnimeDetailsDTO(Anime anime) {
+    public static AnimeDetailsDTO mapToAnimeDetailsDTO(AnimeDTO anime) {
         AnimeDetailsDTO animeDetailsDTO = new AnimeDetailsDTO();
 
         animeDetailsDTO.setMal_id(anime.getMal_id());
