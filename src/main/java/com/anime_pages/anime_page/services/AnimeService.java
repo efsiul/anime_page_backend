@@ -12,9 +12,7 @@ import com.anime_pages.anime_page.models.dtos.AnimeResponseDTO;
 import com.anime_pages.anime_page.models.dtos.AverageScoreByTypeSeasonDTO;
 import com.anime_pages.anime_page.repositories.IAnimeRepository;
 import com.anime_pages.anime_page.services.mapper.AnimeMapper;
-
 import reactor.core.publisher.Flux;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -99,35 +97,45 @@ public class AnimeService implements InterfaceAnimeService {
             System.out.println("Realiza una búsqueda antes de calcular el promedio.");
             return Collections.emptyList();
         }
-
-
+    
         // Get all anime entries
         String searchResultString = searchResult.toString();
-
         List<AnimeDetailsModels> animeDetailsModelsList = convertStringToAnimeDetailsList(searchResultString);
-
+    
         // Calculate the average score by type and season
         List<AverageScoreByTypeSeasonDTO> averageScores = calculateAverageScore(lastSearchedTitle, animeDetailsModelsList);
     
         // Create a list to store the final result
         List<AverageScoreByTypeSeasonDTO> result = new ArrayList<>();
     
-        // Add the title and type information to each entry
+        // Add the title, type, average, and resultado information to each entry
         for (AverageScoreByTypeSeasonDTO averageScore : averageScores) {
-            result.add(new AverageScoreByTypeSeasonDTO(lastSearchedTitle, averageScore.getType(), averageScore.getAverage()));
+            String resultado = calculateResult(averageScore.getAverage());
+            averageScore.setResultado(resultado);
+            result.add(averageScore);
         }
     
         System.out.println("Average Score by Type and Season:");
-        averageScores.forEach(System.out::println);
+        result.forEach(System.out::println);
     
         return result;
     }
 
-    private List<AnimeDetailsModels> convertStringToAnimeDetailsList(String searchResultString) {
+    private String calculateResult(double average) {
+        if (average >= 1 && average <= 4) {
+            return "El tipo de medio no lo recomiendo.";
+        } else if (average >= 5 && average <= 7) {
+            return "Puedes divertirte con ese tipo de contenido.";
+        } else if (average > 7) {
+            return "Genial, este es uno de los mejores tipos de contenidos.";
+        } else {
+            return "Mensaje de resultado no definido.";
+        }
+    }
 
+    private List<AnimeDetailsModels> convertStringToAnimeDetailsList(String searchResultString) {
         String[] titles = searchResultString.split(",");
     
-        // Filtrar títulos no vacíos y obtener las correspondientes entradas desde la base de datos
         return Arrays.stream(titles)
                 .filter(title -> !title.isEmpty())
                 .map(title -> animeRepository.findByTitle(title))
@@ -179,7 +187,6 @@ public class AnimeService implements InterfaceAnimeService {
                 animeDetailsModelsList.add(animeDetailsModel);
             }
         }
-    
         animeRepository.saveAll(animeDetailsModelsList);
     }
 }

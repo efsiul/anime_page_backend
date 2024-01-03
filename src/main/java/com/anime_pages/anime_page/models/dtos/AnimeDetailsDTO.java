@@ -49,12 +49,11 @@ public class AnimeDetailsDTO {
     @JsonProperty("score")
     private Double score;
 
-    @JsonProperty("synopsis")
-    private String synopsis;
-
     @JsonProperty("season")
     private String season;
 
+    @JsonProperty("synopsis")
+    private String synopsis;
     
     private List<AnimeDTO> animes;
 

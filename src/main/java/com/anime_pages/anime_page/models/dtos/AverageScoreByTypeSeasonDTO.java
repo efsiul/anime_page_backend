@@ -7,6 +7,7 @@ public class AverageScoreByTypeSeasonDTO {
     private String title;
     private String type;
     private double average;
+    private String resultado;
 
     public AverageScoreByTypeSeasonDTO(String title, String type, double average) {
         this.title = title;

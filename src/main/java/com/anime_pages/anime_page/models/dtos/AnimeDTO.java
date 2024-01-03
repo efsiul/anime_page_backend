@@ -29,9 +29,11 @@ public class AnimeDTO {
 
     private Double score;
 
+    private String season;
+
     private String synopsis;
 
-    private String season;
+
 
 
 

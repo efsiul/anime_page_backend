@@ -5,10 +5,7 @@ import java.util.List;
 import com.anime_pages.anime_page.interfaces.InterfaceAnimeService;
 import com.anime_pages.anime_page.models.dtos.AnimeDetailsDTO;
 import com.anime_pages.anime_page.models.dtos.AverageScoreByTypeSeasonDTO;
-
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

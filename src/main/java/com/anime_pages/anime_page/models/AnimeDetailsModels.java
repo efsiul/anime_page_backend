@@ -33,10 +33,10 @@ public class AnimeDetailsModels {
     private Integer rank;
     private Integer popularity;
     private Double score;
-
+    private String season;
     @Column(name = "synopsis", length = 8000)
     private String synopsis;
     
-    private String season;
+
 
 }
