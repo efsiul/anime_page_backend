@@ -3,23 +3,22 @@ package com.anime_pages.anime_page.services;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import com.anime_pages.anime_page.interfaces.InterfaceAnimeService;
 import com.anime_pages.anime_page.models.AnimeDetailsModels;
-import com.anime_pages.anime_page.models.dtos.AnimeDTO;
 import com.anime_pages.anime_page.models.dtos.AnimeDetailsDTO;
 import com.anime_pages.anime_page.models.dtos.AnimeResponseDTO;
 import com.anime_pages.anime_page.models.dtos.AverageScoreByTypeSeasonDTO;
 import com.anime_pages.anime_page.repositories.IAnimeRepository;
 import com.anime_pages.anime_page.services.mapper.AnimeMapper;
-
+import reactor.core.publisher.Flux;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,64 +33,160 @@ public class AnimeService implements InterfaceAnimeService {
     private WebClient webClient;
     private final ModelMapper modelMapper; 
 
-    public AnimeService(WebClient webClient, ModelMapper modelMapper, IAnimeRepository animeRepository) {
+    private String lastSearchedType;
+    private StringBuilder searchResult;
+    private String lastSearchedTitle;
+
+    public AnimeService(WebClient webClient, IAnimeRepository animeRepository, ModelMapper modelMapper) {
         this.webClient = webClient;
         this.modelMapper = modelMapper;
         this.animeRepository = animeRepository; 
     }
+
     @Override
-    public List<AnimeDetailsDTO> searchAnimeTitle(String title) {
-        String formattedTitle = title.replace(" ", "%20");
-        String apiUrl = jikanApiUrl + "/anime?q=" + title + formattedTitle + "&sfw&exact=true";
+    public Flux<AnimeDetailsDTO> searchAnimeTitle(String title) {        String formattedTitle = title.replace(" ", "%20");
+        String apiUrl = jikanApiUrl + "/anime?q=" + formattedTitle + "&sfw=true&exact=true";
 
+        // String apiResponse = webClient.get()
+        // .uri(apiUrl)
+        // .retrieve()
+        // .bodyToMono(String.class)
+        // .block();
 
-        try {
+        // System.out.println("API Response: " + apiResponse);
+        return webClient.get()
+        .uri(apiUrl)
+        .retrieve()
+        .bodyToMono(AnimeResponseDTO.class)
+        .flatMapMany(animeResponse -> {
+            List<AnimeDetailsDTO> animeDetailsDTOs = new ArrayList<>();
+            if (animeResponse != null && animeResponse.getAnimes() != null) {
+                animeDetailsDTOs = animeResponse.getAnimes().stream()
+                        .map(AnimeMapper::mapToAnimeDetailsDTO)
+                        .collect(Collectors.toList());
 
-            return webClient.get()
-                    .uri(apiUrl)
-                    .retrieve()
-                    .bodyToMono(AnimeResponseDTO.class)
-                    .map(animeResponse -> {
-                        List<AnimeDetailsDTO> animeDetailsDTOs = new ArrayList<>();
-                        if (animeResponse != null && animeResponse.getAnimes() != null) {
-                            for (AnimeDTO anime : animeResponse.getAnimes()) {
-                                AnimeDetailsDTO animeDetailsDTO = AnimeMapper.mapToAnimeDetailsDTO(anime);
+                Flux<AnimeDetailsDTO> fluxAnimeDetailsDTO = Flux.fromIterable(animeDetailsDTOs);
 
-                                if (!animeRepository.existsByTitle(animeDetailsDTO.getTitle())) {
-                                    AnimeDetailsModels animeDetailsModels = modelMapper.map(animeDetailsDTO, AnimeDetailsModels.class);
-                                    animeRepository.save(animeDetailsModels);
-                                }
+                // Save the results to the database
+                saveAnimeDetailsToDatabase(animeDetailsDTOs);
+                saveAnimeDetailsToSearchResult(animeDetailsDTOs);
+                lastSearchedType = animeDetailsDTOs.isEmpty() ? null : animeDetailsDTOs.get(0).getType();
+                lastSearchedTitle = title;
 
-                                animeDetailsDTOs.add(animeDetailsDTO);
-                            }
-                        }
-    
-                        return animeDetailsDTOs;
-                    })
-                    .block();
-    
-        } catch (Exception e) {
-            e.printStackTrace();
+                return fluxAnimeDetailsDTO;
+            } else {
+                System.out.println("No se encontraron resultados para la búsqueda: " + title);
+                return Flux.empty();
+            }
+        });
+    }
+
+    private void saveAnimeDetailsToSearchResult(List<AnimeDetailsDTO> animeDetailsDTOs) {
+        if (searchResult == null) {
+            searchResult = new StringBuilder();
         }
-    
-        return Collections.emptyList();
+
+        animeDetailsDTOs.forEach(animeDetailsDTO -> {
+            searchResult.append(animeDetailsDTO.getTitle()).append(",");
+        });
     }
 
     @Override
     public List<AverageScoreByTypeSeasonDTO> averageScoreByTypeSeason() {
-        // Obtener todas las entradas de anime
-        List<AnimeDetailsModels> allAnimeEntries = animeRepository.findAll();
+        if (searchResult == null) {
+            System.out.println("Realiza una búsqueda antes de calcular el promedio.");
+            return Collections.emptyList();
+        }
+    
+        // Get all anime entries
+        String searchResultString = searchResult.toString();
+        List<AnimeDetailsModels> animeDetailsModelsList = convertStringToAnimeDetailsList(searchResultString);
+    
+        // Calculate the average score by type and season
+        List<AverageScoreByTypeSeasonDTO> averageScores = calculateAverageScore(lastSearchedTitle, animeDetailsModelsList);
+    
+        // Create a list to store the final result
+        List<AverageScoreByTypeSeasonDTO> result = new ArrayList<>();
+    
+        // Add the title, type, average, and resultado information to each entry
+        for (AverageScoreByTypeSeasonDTO averageScore : averageScores) {
+            String resultado = calculateResult(averageScore.getAverage());
+            averageScore.setResultado(resultado);
+            result.add(averageScore);
+        }
+    
+        System.out.println("Average Score by Type and Season:");
+        result.forEach(System.out::println);
+    
+        return result;
+    }
 
-        // Agrupar por tipo (type) y calcular el promedio de score para cada grupo
-        Map<String, Double> averageScoresByType = allAnimeEntries.stream()
+    private String calculateResult(double average) {
+        if (average >= 1 && average <= 4) {
+            return "El tipo de medio no lo recomiendo.";
+        } else if (average >= 5 && average <= 7) {
+            return "Puedes divertirte con ese tipo de contenido.";
+        } else if (average > 7) {
+            return "Genial, este es uno de los mejores tipos de contenidos.";
+        } else {
+            return "Mensaje de resultado no definido.";
+        }
+    }
+
+    private List<AnimeDetailsModels> convertStringToAnimeDetailsList(String searchResultString) {
+        String[] titles = searchResultString.split(",");
+    
+        return Arrays.stream(titles)
+                .filter(title -> !title.isEmpty())
+                .map(title -> animeRepository.findByTitle(title))
+                .filter(Objects::nonNull)
+                .flatMap(List::stream)  
+                .collect(Collectors.toList());
+    }
+
+    private List<AverageScoreByTypeSeasonDTO> calculateAverageScore(String title, List<AnimeDetailsModels> animeDetailsModelsList) {
+        if (animeDetailsModelsList == null || animeDetailsModelsList.isEmpty()) {
+            // Handle empty or null list as needed
+            return Collections.emptyList();
+        }
+    
+        // Filter null elements
+        List<AnimeDetailsModels> nonNullAnimeList = animeDetailsModelsList.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    
+        // Filter elements with null score
+        List<AnimeDetailsModels> nonNullScoreList = nonNullAnimeList.stream()
+                .filter(anime -> anime.getScore() != null)
+                .collect(Collectors.toList());
+    
+        // Group by type (type) and calculate the average score for each group
+        Map<String, Double> averageScoresByType = nonNullScoreList.stream()
                 .collect(Collectors.groupingBy(AnimeDetailsModels::getType,
                         Collectors.averagingDouble(AnimeDetailsModels::getScore)));
-
-        // Crear la lista de AverageScoreByTypeSeason
-        List<AverageScoreByTypeSeasonDTO> result = averageScoresByType.entrySet().stream()
-                .map(entry -> new AverageScoreByTypeSeasonDTO(entry.getKey(), entry.getValue()))
+    
+        // Create the list of AverageScoreByTypeSeason
+        return averageScoresByType.entrySet().stream()
+                .map(entry -> new AverageScoreByTypeSeasonDTO(title, entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList());
+    }
 
-        return result;
+
+    private void saveAnimeDetailsToDatabase(List<AnimeDetailsDTO> animeDetailsDTOs) {
+        if (animeDetailsDTOs == null || animeDetailsDTOs.isEmpty()) {
+            return;
+        }
+    
+        List<AnimeDetailsModels> animeDetailsModelsList = new ArrayList<>();
+    
+        for (AnimeDetailsDTO animeDetailsDTO : animeDetailsDTOs) {
+            AnimeDetailsModels existingAnime = animeRepository.findByTitleOrMalid(animeDetailsDTO.getTitle(), animeDetailsDTO.getMal_id());
+    
+            if (existingAnime == null) {
+                AnimeDetailsModels animeDetailsModel = modelMapper.map(animeDetailsDTO, AnimeDetailsModels.class);
+                animeDetailsModelsList.add(animeDetailsModel);
+            }
+        }
+        animeRepository.saveAll(animeDetailsModelsList);
     }
 }

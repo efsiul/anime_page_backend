@@ -21,6 +21,8 @@ public class AnimeMapper {
         animeDetailsDTO.setPopularity(anime.getPopularity());
         animeDetailsDTO.setScore(anime.getScore());
         animeDetailsDTO.setSynopsis(anime.getSynopsis());
+        animeDetailsDTO.setSeason(anime.getSeason());   
+        
 
         return animeDetailsDTO;
     }
