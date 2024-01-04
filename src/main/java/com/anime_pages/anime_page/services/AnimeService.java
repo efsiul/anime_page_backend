@@ -1,65 +1,192 @@
 package com.anime_pages.anime_page.services;
 
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 import com.anime_pages.anime_page.interfaces.InterfaceAnimeService;
+import com.anime_pages.anime_page.models.AnimeDetailsModels;
 import com.anime_pages.anime_page.models.dtos.AnimeDetailsDTO;
+import com.anime_pages.anime_page.models.dtos.AnimeResponseDTO;
+import com.anime_pages.anime_page.models.dtos.AverageScoreByTypeSeasonDTO;
+import com.anime_pages.anime_page.repositories.IAnimeRepository;
+import com.anime_pages.anime_page.services.mapper.AnimeMapper;
+import reactor.core.publisher.Flux;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class AnimeService implements InterfaceAnimeService {
+    
+    @Autowired
+    private IAnimeRepository animeRepository;
 
     @Value("${jikan.api.url}")
-    private String jikanApiUrl; // URL de la API de Jikan
+    private String jikanApiUrl; 
 
-    private final RestTemplate restTemplate;
+    private WebClient webClient;
+    private final ModelMapper modelMapper; 
 
-    public AnimeService(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    private String lastSearchedType;
+    private StringBuilder searchResult;
+    private String lastSearchedTitle;
+
+    public AnimeService(WebClient webClient, IAnimeRepository animeRepository, ModelMapper modelMapper) {
+        this.webClient = webClient;
+        this.modelMapper = modelMapper;
+        this.animeRepository = animeRepository; 
     }
 
     @Override
-    public AnimeDetailsDTO searchAnimeTitle(String title) {
-        // Lógica para buscar un título de anime por nombre
-        // Puedes implementar esto según tu necesidad y acceso a datos
-        return null;
+    public Flux<AnimeDetailsDTO> searchAnimeTitle(String title) {        String formattedTitle = title.replace(" ", "%20");
+        String apiUrl = jikanApiUrl + "/anime?q=" + formattedTitle + "&sfw=true&exact=true";
+
+        // String apiResponse = webClient.get()
+        // .uri(apiUrl)
+        // .retrieve()
+        // .bodyToMono(String.class)
+        // .block();
+
+        // System.out.println("API Response: " + apiResponse);
+        return webClient.get()
+        .uri(apiUrl)
+        .retrieve()
+        .bodyToMono(AnimeResponseDTO.class)
+        .flatMapMany(animeResponse -> {
+            List<AnimeDetailsDTO> animeDetailsDTOs = new ArrayList<>();
+            if (animeResponse != null && animeResponse.getAnimes() != null) {
+                animeDetailsDTOs = animeResponse.getAnimes().stream()
+                        .map(AnimeMapper::mapToAnimeDetailsDTO)
+                        .collect(Collectors.toList());
+
+                Flux<AnimeDetailsDTO> fluxAnimeDetailsDTO = Flux.fromIterable(animeDetailsDTOs);
+
+                // Save the results to the database
+                saveAnimeDetailsToDatabase(animeDetailsDTOs);
+                saveAnimeDetailsToSearchResult(animeDetailsDTOs);
+                lastSearchedType = animeDetailsDTOs.isEmpty() ? null : animeDetailsDTOs.get(0).getType();
+                lastSearchedTitle = title;
+
+                return fluxAnimeDetailsDTO;
+            } else {
+                System.out.println("No se encontraron resultados para la búsqueda: " + title);
+                return Flux.empty();
+            }
+        });
     }
 
-    @Override
-    public List<AnimeDetailsDTO> listTopAnimeTitles() {
-        // Lógica para listar al menos 5 títulos en un control deslizante
-        // Puedes implementar esto según tu necesidad y acceso a datos
-        return null;
-    }
-
-    @Override
-    public AnimeDetailsDTO getAnimeDetailsFromApi(String malId) {
-        // Lógica para consumir la API de Animes (Jikan) y obtener detalles
-        String apiUrl = jikanApiUrl + "/anime/" + malId;
-        return restTemplate.getForObject(apiUrl, AnimeDetailsDTO.class);
-    }
-
-    @Override
-    public Double calculateAverageScore(List<AnimeDetailsDTO> animeDetailsList) {
-        // Lógica para calcular la puntuación promedio de todas las temporadas del anime
-        // Puedes implementar esto según tu necesidad
-        double sum = 0;
-        for (AnimeDetailsDTO animeDetails : animeDetailsList) {
-            sum += animeDetails.getScore();
+    private void saveAnimeDetailsToSearchResult(List<AnimeDetailsDTO> animeDetailsDTOs) {
+        if (searchResult == null) {
+            searchResult = new StringBuilder();
         }
-        return sum / animeDetailsList.size();
+
+        animeDetailsDTOs.forEach(animeDetailsDTO -> {
+            searchResult.append(animeDetailsDTO.getTitle()).append(",");
+        });
     }
 
     @Override
-    public String getRecommendationMessage(Double score) {
-        // Lógica para aplicar la regla de negocio y obtener un mensaje según la puntuación
-        if (score >= 1 && score <= 4) {
-            return "No lo recomiendo.";
-        } else if (score >= 5 && score <= 7) {
-            return "Puedes divertirte.";
+    public List<AverageScoreByTypeSeasonDTO> averageScoreByTypeSeason() {
+        if (searchResult == null) {
+            System.out.println("Realiza una búsqueda antes de calcular el promedio.");
+            return Collections.emptyList();
+        }
+    
+        // Get all anime entries
+        String searchResultString = searchResult.toString();
+        List<AnimeDetailsModels> animeDetailsModelsList = convertStringToAnimeDetailsList(searchResultString);
+    
+        // Calculate the average score by type and season
+        List<AverageScoreByTypeSeasonDTO> averageScores = calculateAverageScore(lastSearchedTitle, animeDetailsModelsList);
+    
+        // Create a list to store the final result
+        List<AverageScoreByTypeSeasonDTO> result = new ArrayList<>();
+    
+        // Add the title, type, average, and resultado information to each entry
+        for (AverageScoreByTypeSeasonDTO averageScore : averageScores) {
+            String resultado = calculateResult(averageScore.getAverage());
+            averageScore.setResultado(resultado);
+            result.add(averageScore);
+        }
+    
+        System.out.println("Average Score by Type and Season:");
+        result.forEach(System.out::println);
+    
+        return result;
+    }
+
+    private String calculateResult(double average) {
+        if (average >= 1 && average <= 4) {
+            return "El tipo de medio no lo recomiendo.";
+        } else if (average >= 5 && average <= 7) {
+            return "Puedes divertirte con ese tipo de contenido.";
+        } else if (average > 7) {
+            return "Genial, este es uno de los mejores tipos de contenidos.";
         } else {
-            return "Genial, este es uno de los mejores animes.";
+            return "Mensaje de resultado no definido.";
         }
+    }
+
+    private List<AnimeDetailsModels> convertStringToAnimeDetailsList(String searchResultString) {
+        String[] titles = searchResultString.split(",");
+    
+        return Arrays.stream(titles)
+                .filter(title -> !title.isEmpty())
+                .map(title -> animeRepository.findByTitle(title))
+                .filter(Objects::nonNull)
+                .flatMap(List::stream)  
+                .collect(Collectors.toList());
+    }
+
+    private List<AverageScoreByTypeSeasonDTO> calculateAverageScore(String title, List<AnimeDetailsModels> animeDetailsModelsList) {
+        if (animeDetailsModelsList == null || animeDetailsModelsList.isEmpty()) {
+            // Handle empty or null list as needed
+            return Collections.emptyList();
+        }
+    
+        // Filter null elements
+        List<AnimeDetailsModels> nonNullAnimeList = animeDetailsModelsList.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    
+        // Filter elements with null score
+        List<AnimeDetailsModels> nonNullScoreList = nonNullAnimeList.stream()
+                .filter(anime -> anime.getScore() != null)
+                .collect(Collectors.toList());
+    
+        // Group by type (type) and calculate the average score for each group
+        Map<String, Double> averageScoresByType = nonNullScoreList.stream()
+                .collect(Collectors.groupingBy(AnimeDetailsModels::getType,
+                        Collectors.averagingDouble(AnimeDetailsModels::getScore)));
+    
+        // Create the list of AverageScoreByTypeSeason
+        return averageScoresByType.entrySet().stream()
+                .map(entry -> new AverageScoreByTypeSeasonDTO(title, entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList());
+    }
+
+
+    private void saveAnimeDetailsToDatabase(List<AnimeDetailsDTO> animeDetailsDTOs) {
+        if (animeDetailsDTOs == null || animeDetailsDTOs.isEmpty()) {
+            return;
+        }
+    
+        List<AnimeDetailsModels> animeDetailsModelsList = new ArrayList<>();
+    
+        for (AnimeDetailsDTO animeDetailsDTO : animeDetailsDTOs) {
+            AnimeDetailsModels existingAnime = animeRepository.findByTitleOrMalid(animeDetailsDTO.getTitle(), animeDetailsDTO.getMal_id());
+    
+            if (existingAnime == null) {
+                AnimeDetailsModels animeDetailsModel = modelMapper.map(animeDetailsDTO, AnimeDetailsModels.class);
+                animeDetailsModelsList.add(animeDetailsModel);
+            }
+        }
+        animeRepository.saveAll(animeDetailsModelsList);
     }
 }
