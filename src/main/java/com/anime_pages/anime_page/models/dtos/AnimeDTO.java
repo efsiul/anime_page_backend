@@ -33,8 +33,4 @@ public class AnimeDTO {
 
     private String synopsis;
 
-
-
-
-
 }

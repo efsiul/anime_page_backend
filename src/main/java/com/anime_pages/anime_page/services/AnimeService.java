@@ -140,7 +140,7 @@ public class AnimeService implements InterfaceAnimeService {
                 .filter(title -> !title.isEmpty())
                 .map(title -> animeRepository.findByTitle(title))
                 .filter(Objects::nonNull)
-                .flatMap(List::stream)  // Utilizar flatMap para aplanar la lista de listas
+                .flatMap(List::stream)  
                 .collect(Collectors.toList());
     }
 

@@ -10,7 +10,6 @@ import reactor.core.publisher.Flux;
 
 public interface InterfaceAnimeService {
 
-    // Método para buscar un título de anime
     Flux<AnimeDetailsDTO> searchAnimeTitle(String title);
     
     List<AverageScoreByTypeSeasonDTO> averageScoreByTypeSeason();    

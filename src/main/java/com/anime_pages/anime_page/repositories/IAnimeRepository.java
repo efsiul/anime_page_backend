@@ -19,6 +19,5 @@ public interface IAnimeRepository extends JpaRepository<AnimeDetailsModels, Long
     boolean existsByTitle(String title);
     List<AnimeDetailsModels> findByType(String type);
     List<AnimeDetailsModels> findByTitle(String title);
-    
-    
+
 }
